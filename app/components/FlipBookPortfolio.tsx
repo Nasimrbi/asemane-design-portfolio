@@ -19,6 +19,16 @@ export default function FlipBookPortfolio() {
   const { playFlipSound, FLIP_DURATION } = usePaperSound(soundEnabled);
   const totalPages = PORTFOLIO_PAGES.length;
 
+  // 1. Preload all images into the browser cache right on mount
+  useEffect(() => {
+    PORTFOLIO_PAGES.forEach((page) => {
+      if (page?.imageUrl) {
+        const img = new Image();
+        img.src = encodeURI(page.imageUrl);
+      }
+    });
+  }, []);
+
   const turnNext = useCallback(() => {
     if (isFlipping || currentPage >= totalPages - 1) return;
     setIsFlipping(true);
@@ -67,23 +77,13 @@ export default function FlipBookPortfolio() {
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
 
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-
-    const deltaX = touchEndX - touchStartX.current;
-    const deltaY = touchEndY - touchStartY.current;
-
-    const minSwipeDistance = 45;
-
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-      if (deltaX < 0) {
-        turnNext();
-      } else {
-        turnPrev();
-      }
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 45) {
+      if (deltaX < 0) turnNext();
+      else turnPrev();
     }
-
     touchStartX.current = null;
     touchStartY.current = null;
   };
@@ -94,7 +94,6 @@ export default function FlipBookPortfolio() {
       style={{
         minHeight: '100vh',
         width: '100%',
-        /* Deep violet & purple luxury gradient matching your images */
         background: 'radial-gradient(ellipse at 50% 30%, #4a0d4e 0%, #200424 60%, #110214 100%)',
         display: 'flex',
         flexDirection: 'column',
@@ -135,7 +134,14 @@ export default function FlipBookPortfolio() {
         }
       `}</style>
 
-      {/* Top Header Controls */}
+      {/* Hidden container so the browser keeps all images decoded and cached */}
+      <div style={{ display: 'none' }} aria-hidden="true">
+        {PORTFOLIO_PAGES.map((page) => (
+          <img key={page.id} src={encodeURI(page.imageUrl)} alt="" />
+        ))}
+      </div>
+
+      {/* Top Controls */}
       <header
         style={{
           width: '100%',
@@ -203,7 +209,7 @@ export default function FlipBookPortfolio() {
         </button>
       </header>
 
-      {/* Main Single Page Stage: Strict A5 Ratio (21 / 14.8) */}
+      {/* Main Single Page Stage */}
       <main
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -227,7 +233,6 @@ export default function FlipBookPortfolio() {
             width: '100%',
             height: '100%',
             borderRadius: '10px',
-            /* Rich purple ambient glow and depth shadow */
             boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7), 0 0 45px rgba(175, 40, 200, 0.25)',
             transformStyle: 'preserve-3d',
             backgroundColor: '#2b0630',
@@ -252,7 +257,6 @@ export default function FlipBookPortfolio() {
                 backgroundColor: '#2b0630',
               }}
             >
-              {/* Front of the flipping page */}
               <div
                 className="preserve-purple-face"
                 style={{
@@ -266,7 +270,6 @@ export default function FlipBookPortfolio() {
                 />
               </div>
 
-              {/* Back of the flipping page */}
               <div
                 className="preserve-purple-face"
                 style={{
@@ -283,7 +286,7 @@ export default function FlipBookPortfolio() {
             </div>
           )}
 
-          {/* Desktop Click Hotspots */}
+          {/* Hotspots */}
           <div
             onClick={turnPrev}
             style={{
@@ -311,7 +314,7 @@ export default function FlipBookPortfolio() {
         </div>
       </main>
 
-      {/* Footer Navigation Bar */}
+      {/* Footer Navigation */}
       <footer
         style={{
           zIndex: 20,
@@ -361,7 +364,7 @@ export default function FlipBookPortfolio() {
                 height: '6px',
                 width: currentPage === idx ? '22px' : '6px',
                 borderRadius: '9999px',
-                backgroundColor: currentPage === idx ? '#FFD54F' : 'rgba(255, 255, 255, 0.25)', // Elegant gold accent dot
+                backgroundColor: currentPage === idx ? '#FFD54F' : 'rgba(255, 255, 255, 0.25)',
                 border: 'none',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
@@ -388,7 +391,7 @@ export default function FlipBookPortfolio() {
             letterSpacing: '0.5px',
           }}
         >
-          صفحه بعد <ChevronRight size={16} />
+          صقحه ی بعد <ChevronRight size={16} />
         </button>
       </footer>
     </div>
@@ -406,13 +409,13 @@ function SingleImagePage({ page }: { page?: { imageUrl: string; alt: string } })
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        /* Vibrant matching purple background prevents letterbox letter gaps from showing black or white */
         background: 'linear-gradient(135deg, #a832a8 0%, #68176e 50%, #430c48 100%)',
       }}
     >
       <img
         src={encodeURI(page.imageUrl)}
         alt={page.alt}
+        decoding="async"
         style={{
           width: '100%',
           height: '100%',
