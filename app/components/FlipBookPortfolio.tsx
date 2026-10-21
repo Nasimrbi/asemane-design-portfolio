@@ -136,9 +136,13 @@ export default function FlipBookPortfolio() {
 
       {/* Hidden container so the browser keeps all images decoded and cached */}
       <div style={{ display: 'none' }} aria-hidden="true">
-        {PORTFOLIO_PAGES.map((page) => (
-          <img key={page.id} src={encodeURI(page.imageUrl)} alt="" />
-        ))}
+        {PORTFOLIO_PAGES.map((page) =>
+          page.imageUrl ? (
+            <img key={page.id} src={encodeURI(page.imageUrl)} alt={page.alt || ''} />
+          ) : (
+            <div key={page.id} style={{ color: '#fff' }}>{page.title}</div>
+          )
+        )}
       </div>
 
       {/* Top Controls */}
@@ -240,7 +244,9 @@ export default function FlipBookPortfolio() {
           }}
         >
           {/* Base Active Page */}
-          <SingleImagePage page={PORTFOLIO_PAGES[flipDirection === 'next' ? currentPage + 1 : currentPage]} />
+          <RenderPortfolioPage
+            page={PORTFOLIO_PAGES[flipDirection === 'next' ? currentPage + 1 : currentPage]}
+          />
 
           {/* 3D Animated Flip Leaf */}
           {isFlipping && (
@@ -257,29 +263,14 @@ export default function FlipBookPortfolio() {
                 backgroundColor: '#2b0630',
               }}
             >
-              <div
-                className="preserve-purple-face"
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  overflow: 'hidden',
-                }}
-              >
-                <SingleImagePage
+              <div className="preserve-purple-face" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+                <RenderPortfolioPage
                   page={PORTFOLIO_PAGES[flipDirection === 'next' ? currentPage : currentPage - 1]}
                 />
               </div>
 
-              <div
-                className="preserve-purple-face"
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  transform: 'rotateY(180deg)',
-                  overflow: 'hidden',
-                }}
-              >
-                <SingleImagePage
+              <div className="preserve-purple-face" style={{ position: 'absolute', inset: 0, transform: 'rotateY(180deg)', overflow: 'hidden' }}>
+                <RenderPortfolioPage
                   page={PORTFOLIO_PAGES[flipDirection === 'next' ? currentPage + 1 : currentPage]}
                 />
               </div>
@@ -398,7 +389,7 @@ export default function FlipBookPortfolio() {
   );
 }
 
-function SingleImagePage({ page }: { page?: { imageUrl: string; alt: string } }) {
+function SingleImagePage({ page }: { page?: { imageUrl?: string; alt: string; title?: string } }) {
   if (!page?.imageUrl) return null;
 
   return (
@@ -427,3 +418,76 @@ function SingleImagePage({ page }: { page?: { imageUrl: string; alt: string } })
     </div>
   );
 }
+
+// 2. Separate component dedicated ONLY to title/text pages
+function SingleTitlePage({ page }: { page: { title?: string } }) {
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #4a0d4e 0%, #200424 60%, #110214 100%)',
+        padding: '32px',
+        boxSizing: 'border-box',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '16px',
+          // border: '1px solid rgba(255, 255, 255, 0.15)',
+          // borderRadius: '16px',
+          padding: '40px',
+          width: '85%',
+          height: '80%',
+          // background: 'rgba(255, 255, 255, 0.04)',
+          // backdropFilter: 'blur(8px)',
+        }}
+      >
+        <h6
+          style={{
+            color: '#FDF4FF',
+            fontSize: '1.7rem',
+            fontWeight: 800,
+            margin: 0,
+            textAlign: 'center',
+            letterSpacing: '1.5px',
+          }}
+        >
+          {page.title}
+        </h6>
+        <div
+          style={{
+            width: '48px',
+            height: '3px',
+            borderRadius: '9999px',
+            backgroundColor: '#FFD54F',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// 3. Dispatcher component that selects the correct function
+function RenderPortfolioPage({
+  page,
+}: {
+  page?: { imageUrl?: string; alt?: string; title?: string };
+}) {
+  if (!page) return null;
+
+  if (page.imageUrl) {
+    return <SingleImagePage page={{ imageUrl: page.imageUrl, alt: page.alt }} />;
+  }
+
+  return <SingleTitlePage page={{ title: page.title }} />;
+}
+
