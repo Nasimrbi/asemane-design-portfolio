@@ -4,7 +4,7 @@ import './globals.css'; // Make sure this matches your file name (globals.css or
 export const metadata: Metadata = {
   title: 'portfolio',
   description: "asmeane's portfolio",
-};
+}; 
 
 export default function RootLayout({
   children,

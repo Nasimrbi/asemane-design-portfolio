@@ -389,7 +389,7 @@ export default function FlipBookPortfolio() {
   );
 }
 
-function SingleImagePage({ page }: { page?: { imageUrl?: string; alt: string; title?: string } }) {
+function SingleImagePage({ page }: { page?: { imageUrl?: string; alt?: string; title?: string } }) {
   if (!page?.imageUrl) return null;
 
   return (
@@ -480,7 +480,7 @@ function SingleTitlePage({ page }: { page: { title?: string } }) {
 function RenderPortfolioPage({
   page,
 }: {
-  page?: { imageUrl?: string; alt?: string; title?: string };
+  page?: { imageUrl?: string | undefined; alt?: string; title?: string | undefined };
 }) {
   if (!page) return null;
 
